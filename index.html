@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+  <title>Tools Teknisi</title>
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --card-bg: #111827;
+      --neon: #00d9ff;
+      --neon-glow: 0 0 8px #00d9ff, 0 0 16px #00d9ff, 0 0 32px #00d9ff;
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Segoe UI", Roboto, sans-serif;
+      background: radial-gradient(circle at 50% -20%, #102a43 0%, #000 80%);
+      color: white;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      overflow-x: hidden;
+    }
+
+    /* efek bintang neon */
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image: 
+        radial-gradient(circle, rgba(0,217,255,0.5) 2px, transparent 2px),
+        radial-gradient(circle, rgba(0,217,255,0.3) 1px, transparent 1px);
+      background-size: 80px 80px, 40px 40px;
+      background-position: 0 0, 20px 20px;
+      z-index: 0;
+      animation: moveStars 40s linear infinite;
+    }
+
+    @keyframes moveStars {
+      from { background-position: 0 0, 20px 20px; }
+      to { background-position: 80px 80px, 100px 100px; }
+    }
+
+    h1 {
+      font-size: 28px;
+      letter-spacing: 3px;
+      margin-top: 60px;
+      text-transform: uppercase;
+      color: var(--neon);
+      text-shadow: var(--neon-glow);
+      z-index: 1;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 160px);
+      gap: 24px;
+      margin: 40px 0;
+      z-index: 1;
+    }
+
+    .card {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 120px;
+      border-radius: var(--radius);
+      background: var(--card-bg);
+      color: var(--neon);
+      text-decoration: none;
+      font-size: 18px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      box-shadow: inset 0 0 12px rgba(0, 217, 255, 0.4);
+      overflow: hidden;
+    }
+
+    .card:hover {
+      transform: translateY(-4px) scale(1.03);
+      box-shadow: var(--neon-glow);
+    }
+
+    .card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius);
+      padding: 2px;
+      background: linear-gradient(45deg, transparent, var(--neon), transparent);
+      -webkit-mask: 
+        linear-gradient(#fff 0 0) content-box, 
+        linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+              mask-composite: exclude;
+      animation: border-anim 3s linear infinite;
+    }
+
+    @keyframes border-anim {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    footer {
+      width: 100%;
+      text-align: center;
+      padding: 20px 0;
+      font-size: 14px;
+      color: rgba(255,255,255,0.7);
+      background: rgba(0,0,0,0.4);
+      backdrop-filter: blur(6px);
+      z-index: 1;
+    }
+
+    /* Modal Alert */
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.7);
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity .3s ease, visibility .3s ease;
+      z-index: 999;
+    }
+    .modal.show {
+      visibility: visible;
+      opacity: 1;
+    }
+    .modal-box {
+      background: #111827;
+      padding: 24px 32px;
+      border-radius: 12px;
+      text-align: center;
+      box-shadow: var(--neon-glow);
+      max-width: 300px;
+      border: 2px solid var(--neon);
+      animation: pop .4s ease;
+    }
+    .modal-box h2 {
+      margin: 0 0 10px;
+      font-size: 20px;
+      color: var(--neon);
+    }
+    .modal-box p {
+      margin: 0 0 16px;
+      font-size: 14px;
+      color: #ccc;
+    }
+    .btn-close {
+      background: var(--neon);
+      border: none;
+      color: #000;
+      font-weight: bold;
+      padding: 8px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .btn-close:hover {
+      background: #00bfe6;
+    }
+    @keyframes pop {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @media (max-width: 480px) {
+      .grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+      .card {
+        height: 100px;
+        font-size: 15px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <h1>TOOLS TEKNISI</h1>
+
+  <div class="grid">
+    <a href="https://ionnetworksubang.github.io/form" class="card">TOOLS WA</a>
+    <a href="https://ionnetworksubang.github.io/Ion-network/form.html" class="card">INPUT CUSTOMER</a>
+    <a href="#" class="card" data-dev="true">KMZ</a>
+    <a href="#" class="card" data-dev="true">+</a>
+  </div>
+
+  <footer>© Jhon 2025</footer>
+
+  <!-- Modal Alert -->
+  <div class="modal" id="modal">
+    <div class="modal-box">
+      <h2>🚧 Dalam Pengembangan</h2>
+      <p>Fitur ini masih dalam tahap pengembangan. Nantikan update berikutnya!</p>
+      <button class="btn-close" onclick="closeModal()">Tutup</button>
+    </div>
+  </div>
+
+  <script>
+    const modal = document.getElementById("modal");
+    const devLinks = document.querySelectorAll('[data-dev="true"]');
+
+    devLinks.forEach(link=>{
+      link.addEventListener("click", e=>{
+        e.preventDefault();
+        modal.classList.add("show");
+      });
+    });
+
+    function closeModal(){
+      modal.classList.remove("show");
+    }
+
+    // klik luar modal juga nutup
+    modal.addEventListener("click", e=>{
+      if(e.target === modal){
+        closeModal();
+      }
+    });
+  </script>
+</body>
+</html>
+  
