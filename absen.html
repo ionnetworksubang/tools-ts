@@ -3,214 +3,206 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Laporan Kerja Teknisi</title>
+  <title>Absensi & Laporan Teknisi</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Poppins:wght@400;600&display=swap');
+
     body {
-      font-family: "Poppins", sans-serif;
       margin: 0;
-      background: #f4f6f9;
+      font-family: "Poppins", sans-serif;
+      background: #0a0f1c;
+      color: #fff;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
       padding: 20px;
-      color: #333;
     }
-    h2 {
-      margin-bottom: 10px;
-      color: #222;
+    .container {
+      width: 100%;
+      max-width: 800px;
+      background: rgba(255,255,255,0.05);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 0 20px rgba(0,255,255,0.2);
     }
-    .card {
-      background: #fff;
-      padding: 15px;
-      border-radius: 12px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+    h1 {
+      text-align: center;
+      font-family: "Orbitron", sans-serif;
+      color: #0ff;
       margin-bottom: 20px;
     }
     label {
-      font-size: 0.9em;
-      font-weight: 500;
-      margin-bottom: 5px;
+      font-weight: 600;
+      margin-top: 10px;
       display: block;
     }
-    input, textarea, select {
+    input, textarea, button {
       width: 100%;
       padding: 10px;
-      margin-bottom: 12px;
+      margin-top: 6px;
       border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 0.9em;
+      border: none;
+      outline: none;
+      font-size: 0.95em;
+    }
+    input, textarea {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
     }
     textarea {
-      resize: vertical;
       min-height: 60px;
+      resize: vertical;
     }
     button {
-      background: #0077ff;
-      color: white;
-      border: none;
-      padding: 10px 18px;
-      border-radius: 8px;
-      font-size: 1em;
+      background: #0ff;
+      color: #000;
+      font-weight: 600;
+      margin-top: 12px;
       cursor: pointer;
-      transition: 0.2s;
-      margin-top: 5px;
+      transition: 0.25s;
     }
     button:hover {
-      background: #005fcc;
+      background: #00cccc;
+      transform: scale(1.02);
     }
-    .output {
-      white-space: pre-line;
-      background: #fefefe;
-      border: 1px dashed #bbb;
+    .preview {
+      margin-top: 20px;
+      background: rgba(0,0,0,0.4);
       padding: 15px;
-      border-radius: 10px;
-      min-height: 120px;
-      margin-top: 10px;
+      border-radius: 12px;
+      white-space: pre-wrap;
     }
     .actions {
       display: flex;
+      flex-direction: column;
       gap: 10px;
-      flex-wrap: wrap;
+      margin-top: 15px;
     }
   </style>
 </head>
 <body>
+<div class="container">
+  <h1>Absensi & Laporan Teknisi</h1>
 
-  <h2>📋 Laporan Kerja Teknisi</h2>
+  <label>Tanggal</label>
+  <input type="date" id="tanggal">
 
-  <!-- Tanggal -->
-  <div class="card">
-    <label>Tanggal</label>
-    <input type="date" id="tanggal">
+  <label>Instalasi (nama pisahkan koma, tim baru pakai titik)</label>
+  <textarea id="instalasi"></textarea>
+
+  <label>Maintenance</label>
+  <textarea id="maintenance"></textarea>
+
+  <label>ODP</label>
+  <textarea id="odp"></textarea>
+
+  <label>Tarik (contoh: tarikan 1.9km,2.8km | tim baru pakai titik)</label>
+  <textarea id="tarik"></textarea>
+
+  <label>Kerjaan lainnya (contoh: survey. instalasi HPS)</label>
+  <textarea id="lainnya"></textarea>
+
+  <label>Izin</label>
+  <textarea id="izin"></textarea>
+
+  <label>Sakit</label>
+  <textarea id="sakit"></textarea>
+
+  <label>Alfa</label>
+  <textarea id="alfa"></textarea>
+
+  <button onclick="generate()">Preview Laporan</button>
+
+  <div class="preview" id="preview"></div>
+
+  <div class="actions" id="actions" style="display:none;">
+    <button onclick="copyText()">Salin</button>
+    <button onclick="sendWA()">Kirim WhatsApp</button>
+    <button onclick="clearPreview()">Hapus</button>
   </div>
-
-  <!-- Instalasi -->
-  <div class="card">
-    <label>Instalasi (pisah anggota dengan koma, tim baru pakai ".")</label>
-    <textarea id="instalasi"></textarea>
-  </div>
-
-  <!-- Maintenance -->
-  <div class="card">
-    <label>Maintenance (pisah anggota dengan koma, tim baru pakai ".")</label>
-    <textarea id="maintenance"></textarea>
-  </div>
-
-  <!-- Tim ODP -->
-  <div class="card">
-    <label>Tim ODP (pisah anggota dengan koma, tim baru pakai ".")</label>
-    <textarea id="odp"></textarea>
-  </div>
-
-  <!-- Tim Tarik -->
-  <div class="card">
-    <label>Tim Tarik (format: tarikan 1.9km,2.8km enter nama2. Tim baru pakai ".")</label>
-    <textarea id="tarik"></textarea>
-  </div>
-
-  <!-- Kerjaan Lainnya -->
-  <div class="card">
-    <label>Kerjaan Lainnya (contoh: Survey Rido,Bambang.Abdul,Kusoy)</label>
-    <textarea id="lainnya"></textarea>
-  </div>
-
-  <!-- Izin / Sakit / Alfa -->
-  <div class="card">
-    <label>Izin / Sakit / Alfa</label>
-    <textarea id="izin"></textarea>
-  </div>
-
-  <!-- Actions -->
-  <div class="actions">
-    <button onclick="generateLaporan()">📑 Buat Laporan</button>
-    <button onclick="copyLaporan()">📋 Salin</button>
-    <button onclick="clearLaporan()">🗑 Hapus</button>
-  </div>
-
-  <!-- Output -->
-  <div class="card">
-    <label>Preview Laporan:</label>
-    <div class="output" id="output"></div>
-  </div>
+</div>
 
 <script>
-function formatTeams(input) {
+function formatTeams(input, prefix="Team") {
   if (!input.trim()) return "";
-  let teams = input.split(".");
+  let blocks = input.split(".");
   let result = "";
-  teams.forEach((team, idx) => {
-    let members = team.split(",").map(n => n.trim()).filter(n => n);
-    if (members.length > 0) {
-      result += `Team ${idx+1} : ${members.join(" & ")}\n`;
+  blocks.forEach((block, i) => {
+    let teams = block.split(",");
+    let names = teams.map(n => n.trim()).filter(n => n);
+    if (names.length) {
+      result += `${prefix} ${i+1} : ${names.join(" & ")}\n`;
     }
   });
-  return result.trim();
+  return result;
 }
 
-function formatTarik(input) {
-  if (!input.trim()) return "";
-  let lines = input.split("\n").map(l => l.trim()).filter(l => l);
-  let result = "";
-  let tarikanInfo = "";
-  let idx = 0;
-  lines.forEach(line => {
-    if (line.toLowerCase().includes("km")) {
-      tarikanInfo = line;
-    } else {
-      let teams = line.split(".");
-      teams.forEach((team, tIdx) => {
-        let members = team.split(",").map(n => n.trim()).filter(n => n);
-        if (members.length > 0) {
-          idx++;
-          result += `Team Tarik ${idx} ${tarikanInfo ? tarikanInfo : ""} : ${members.join(" & ")}\n`;
-        }
-      });
-    }
-  });
-  return result.trim();
-}
-
-function formatLainnya(input) {
-  if (!input.trim()) return "";
-  let sections = input.split("\n").map(l => l.trim()).filter(l => l);
-  let result = "";
-  sections.forEach(sec => {
-    let [jenis, ...rest] = sec.split(" ");
-    let content = rest.join(" ");
-    if (!content) return;
-    result += `${jenis}\n${formatTeams(content)}\n\n`;
-  });
-  return result.trim();
-}
-
-function generateLaporan() {
+function generate() {
   let tanggal = document.getElementById("tanggal").value;
-  let instalasi = formatTeams(document.getElementById("instalasi").value);
-  let maintenance = formatTeams(document.getElementById("maintenance").value);
-  let odp = formatTeams(document.getElementById("odp").value);
-  let tarik = formatTarik(document.getElementById("tarik").value);
-  let lainnya = formatLainnya(document.getElementById("lainnya").value);
+  let instalasi = formatTeams(document.getElementById("instalasi").value, "Team");
+  let maintenance = formatTeams(document.getElementById("maintenance").value, "Team");
+  let odp = formatTeams(document.getElementById("odp").value, "Team");
+
+  let tarik = "";
+  if (document.getElementById("tarik").value.trim()) {
+    let blocks = document.getElementById("tarik").value.split(".");
+    blocks.forEach((block, i) => {
+      let parts = block.split("|");
+      let tarikan = parts[0]?.trim() ? `Tarikan ${parts[0].trim()}` : "";
+      let tim = formatTeams(parts[1]||"", "Team");
+      tarik += `Team Tarik ${i+1} ${tarikan}\n${tim}\n`;
+    });
+  }
+
+  let lainnya = "";
+  if (document.getElementById("lainnya").value.trim()) {
+    let jenis = document.getElementById("lainnya").value.split(".");
+    jenis.forEach((j) => {
+      lainnya += `${j.trim()}\n`;
+    });
+  }
+
   let izin = document.getElementById("izin").value.trim();
+  let sakit = document.getElementById("sakit").value.trim();
+  let alfa = document.getElementById("alfa").value.trim();
 
-  let laporan = `LAPORAN TEKNISI ${tanggal}\n\n`;
-  if (instalasi) laporan += `Instalasi\n${instalasi}\n\n`;
-  if (maintenance) laporan += `Maintenance\n${maintenance}\n\n`;
-  if (odp) laporan += `Tim ODP\n${odp}\n\n`;
-  if (tarik) laporan += `Tim Tarik\n${tarik}\n\n`;
-  if (lainnya) laporan += `${lainnya}\n`;
-  if (izin) laporan += `Izin / Sakit / Alfa\n${izin}\n`;
+  let laporan = `Tanggal : ${tanggal}\n\n`;
+  if (instalasi) laporan += `Instalasi\n${instalasi}\n`;
+  if (maintenance) laporan += `Maintenance\n${maintenance}\n`;
+  if (odp) laporan += `ODP\n${odp}\n`;
+  if (tarik) laporan += `Tarik\n${tarik}\n`;
+  if (lainnya) laporan += `Kerjaan Lainnya\n${lainnya}\n`;
+  if (izin) laporan += `Izin : ${izin}\n`;
+  if (sakit) laporan += `Sakit : ${sakit}\n`;
+  if (alfa) laporan += `Alfa : ${alfa}\n`;
 
-  document.getElementById("output").innerText = laporan.trim();
+  document.getElementById("preview").innerText = laporan;
+  document.getElementById("actions").style.display = "flex";
 }
 
-function copyLaporan() {
-  let text = document.getElementById("output").innerText;
-  if (!text) return alert("Buat laporan dulu!");
-  navigator.clipboard.writeText(text);
-  alert("Laporan disalin!");
+function copyText() {
+  let text = document.getElementById("preview").innerText;
+  navigator.clipboard.writeText(text).then(()=>{
+    alert("Laporan disalin!");
+  });
 }
 
-function clearLaporan() {
-  document.getElementById("output").innerText = "";
+function sendWA() {
+  let text = document.getElementById("preview").innerText;
+  if (!text.trim()) {
+    alert("Belum ada laporan untuk dikirim.");
+    return;
+  }
+  let url = "https://wa.me/?text=" + encodeURIComponent(text);
+  window.open(url, "_blank");
+}
+
+function clearPreview() {
+  document.getElementById("preview").innerText = "";
+  document.getElementById("actions").style.display = "none";
 }
 </script>
 </body>
-      </html>
-      
+    </html>
+    
