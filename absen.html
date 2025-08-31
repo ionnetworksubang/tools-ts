@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Laporan Kerja Teknisi</title>
+  <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      margin: 0;
+      background: #f4f6f9;
+      padding: 20px;
+      color: #333;
+    }
+    h2 {
+      margin-bottom: 10px;
+      color: #222;
+    }
+    .card {
+      background: #fff;
+      padding: 15px;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+      margin-bottom: 20px;
+    }
+    label {
+      font-size: 0.9em;
+      font-weight: 500;
+      margin-bottom: 5px;
+      display: block;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      font-size: 0.9em;
+    }
+    textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+    button {
+      background: #0077ff;
+      color: white;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 1em;
+      cursor: pointer;
+      transition: 0.2s;
+      margin-top: 5px;
+    }
+    button:hover {
+      background: #005fcc;
+    }
+    .output {
+      white-space: pre-line;
+      background: #fefefe;
+      border: 1px dashed #bbb;
+      padding: 15px;
+      border-radius: 10px;
+      min-height: 120px;
+      margin-top: 10px;
+    }
+    .actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>📋 Laporan Kerja Teknisi</h2>
+
+  <!-- Tanggal -->
+  <div class="card">
+    <label>Tanggal</label>
+    <input type="date" id="tanggal">
+  </div>
+
+  <!-- Instalasi -->
+  <div class="card">
+    <label>Instalasi (pisah anggota dengan koma, tim baru pakai ".")</label>
+    <textarea id="instalasi"></textarea>
+  </div>
+
+  <!-- Maintenance -->
+  <div class="card">
+    <label>Maintenance (pisah anggota dengan koma, tim baru pakai ".")</label>
+    <textarea id="maintenance"></textarea>
+  </div>
+
+  <!-- Tim ODP -->
+  <div class="card">
+    <label>Tim ODP (pisah anggota dengan koma, tim baru pakai ".")</label>
+    <textarea id="odp"></textarea>
+  </div>
+
+  <!-- Tim Tarik -->
+  <div class="card">
+    <label>Tim Tarik (format: tarikan 1.9km,2.8km enter nama2. Tim baru pakai ".")</label>
+    <textarea id="tarik"></textarea>
+  </div>
+
+  <!-- Kerjaan Lainnya -->
+  <div class="card">
+    <label>Kerjaan Lainnya (contoh: Survey Rido,Bambang.Abdul,Kusoy)</label>
+    <textarea id="lainnya"></textarea>
+  </div>
+
+  <!-- Izin / Sakit / Alfa -->
+  <div class="card">
+    <label>Izin / Sakit / Alfa</label>
+    <textarea id="izin"></textarea>
+  </div>
+
+  <!-- Actions -->
+  <div class="actions">
+    <button onclick="generateLaporan()">📑 Buat Laporan</button>
+    <button onclick="copyLaporan()">📋 Salin</button>
+    <button onclick="clearLaporan()">🗑 Hapus</button>
+  </div>
+
+  <!-- Output -->
+  <div class="card">
+    <label>Preview Laporan:</label>
+    <div class="output" id="output"></div>
+  </div>
+
+<script>
+function formatTeams(input) {
+  if (!input.trim()) return "";
+  let teams = input.split(".");
+  let result = "";
+  teams.forEach((team, idx) => {
+    let members = team.split(",").map(n => n.trim()).filter(n => n);
+    if (members.length > 0) {
+      result += `Team ${idx+1} : ${members.join(" & ")}\n`;
+    }
+  });
+  return result.trim();
+}
+
+function formatTarik(input) {
+  if (!input.trim()) return "";
+  let lines = input.split("\n").map(l => l.trim()).filter(l => l);
+  let result = "";
+  let tarikanInfo = "";
+  let idx = 0;
+  lines.forEach(line => {
+    if (line.toLowerCase().includes("km")) {
+      tarikanInfo = line;
+    } else {
+      let teams = line.split(".");
+      teams.forEach((team, tIdx) => {
+        let members = team.split(",").map(n => n.trim()).filter(n => n);
+        if (members.length > 0) {
+          idx++;
+          result += `Team Tarik ${idx} ${tarikanInfo ? tarikanInfo : ""} : ${members.join(" & ")}\n`;
+        }
+      });
+    }
+  });
+  return result.trim();
+}
+
+function formatLainnya(input) {
+  if (!input.trim()) return "";
+  let sections = input.split("\n").map(l => l.trim()).filter(l => l);
+  let result = "";
+  sections.forEach(sec => {
+    let [jenis, ...rest] = sec.split(" ");
+    let content = rest.join(" ");
+    if (!content) return;
+    result += `${jenis}\n${formatTeams(content)}\n\n`;
+  });
+  return result.trim();
+}
+
+function generateLaporan() {
+  let tanggal = document.getElementById("tanggal").value;
+  let instalasi = formatTeams(document.getElementById("instalasi").value);
+  let maintenance = formatTeams(document.getElementById("maintenance").value);
+  let odp = formatTeams(document.getElementById("odp").value);
+  let tarik = formatTarik(document.getElementById("tarik").value);
+  let lainnya = formatLainnya(document.getElementById("lainnya").value);
+  let izin = document.getElementById("izin").value.trim();
+
+  let laporan = `LAPORAN TEKNISI ${tanggal}\n\n`;
+  if (instalasi) laporan += `Instalasi\n${instalasi}\n\n`;
+  if (maintenance) laporan += `Maintenance\n${maintenance}\n\n`;
+  if (odp) laporan += `Tim ODP\n${odp}\n\n`;
+  if (tarik) laporan += `Tim Tarik\n${tarik}\n\n`;
+  if (lainnya) laporan += `${lainnya}\n`;
+  if (izin) laporan += `Izin / Sakit / Alfa\n${izin}\n`;
+
+  document.getElementById("output").innerText = laporan.trim();
+}
+
+function copyLaporan() {
+  let text = document.getElementById("output").innerText;
+  if (!text) return alert("Buat laporan dulu!");
+  navigator.clipboard.writeText(text);
+  alert("Laporan disalin!");
+}
+
+function clearLaporan() {
+  document.getElementById("output").innerText = "";
+}
+</script>
+</body>
+      </html>
+      
