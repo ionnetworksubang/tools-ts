@@ -37,7 +37,7 @@
       margin-top: 10px;
       display: block;
     }
-    input, textarea, button {
+    textarea, input, button {
       width: 100%;
       padding: 10px;
       margin-top: 6px;
@@ -46,7 +46,7 @@
       outline: none;
       font-size: 0.95em;
     }
-    input, textarea {
+    textarea, input {
       background: rgba(255,255,255,0.1);
       color: #fff;
     }
@@ -79,6 +79,28 @@
       gap: 10px;
       margin-top: 15px;
     }
+    /* Style untuk autocomplete */
+    .suggestions {
+      position: absolute;
+      background: #111;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+      max-height: 150px;
+      overflow-y: auto;
+      z-index: 1000;
+      width: calc(100% - 20px);
+    }
+    .suggestions div {
+      padding: 8px 12px;
+      cursor: pointer;
+    }
+    .suggestions div:hover {
+      background: #0ff;
+      color: #000;
+    }
+    .relative {
+      position: relative;
+    }
   </style>
 </head>
 <body>
@@ -88,26 +110,47 @@
   <label>Tanggal</label>
   <input type="date" id="tanggal">
 
-  <label>Maintenance & Instalasi (pisahkan nama dengan koma)</label>
-  <textarea id="mainst"></textarea>
+  <div class="relative">
+    <label>Maintenance & Instalasi (pisahkan dengan koma)</label>
+    <textarea id="mainst" oninput="showSuggestions(this)"></textarea>
+    <div class="suggestions" id="sug-mainst"></div>
+  </div>
 
-  <label>ODP</label>
-  <textarea id="odp"></textarea>
+  <div class="relative">
+    <label>ODP</label>
+    <textarea id="odp" oninput="showSuggestions(this)"></textarea>
+    <div class="suggestions" id="sug-odp"></div>
+  </div>
 
-  <label>Tarik (contoh: tarikan 1.9km,2.8km | tim baru pakai titik)</label>
-  <textarea id="tarik"></textarea>
+  <div class="relative">
+    <label>Tarik (contoh: 1.9km|Ridwan, Naufal)</label>
+    <textarea id="tarik" oninput="showSuggestions(this)"></textarea>
+    <div class="suggestions" id="sug-tarik"></div>
+  </div>
 
-  <label>Kerjaan lainnya (contoh: survey. instalasi HPS)</label>
-  <textarea id="lainnya"></textarea>
+  <div class="relative">
+    <label>Kerjaan lainnya</label>
+    <textarea id="lainnya" oninput="showSuggestions(this)"></textarea>
+    <div class="suggestions" id="sug-lainnya"></div>
+  </div>
 
-  <label>Izin</label>
-  <textarea id="izin"></textarea>
+  <div class="relative">
+    <label>Izin</label>
+    <textarea id="izin" oninput="showSuggestions(this)"></textarea>
+    <div class="suggestions" id="sug-izin"></div>
+  </div>
 
-  <label>Sakit</label>
-  <textarea id="sakit"></textarea>
+  <div class="relative">
+    <label>Sakit</label>
+    <textarea id="sakit" oninput="showSuggestions(this)"></textarea>
+    <div class="suggestions" id="sug-sakit"></div>
+  </div>
 
-  <label>Alfa</label>
-  <textarea id="alfa"></textarea>
+  <div class="relative">
+    <label>Alfa</label>
+    <textarea id="alfa" oninput="showSuggestions(this)"></textarea>
+    <div class="suggestions" id="sug-alfa"></div>
+  </div>
 
   <button onclick="generate()">Preview Laporan</button>
 
@@ -121,19 +164,19 @@
 </div>
 
 <script>
-// Master daftar nama (23 orang fix, tanpa alias)
+// Master daftar nama
 const masterList = [
   "Hendrik","Naufal","Ridwan","M Ridho","Gugun","Ricky","Doni","Latif","Hapid",
   "Firman","Harys","Syaiful","Ramdan","Adrian","Gelar","Taupik","Sahid","Ridho",
   "Gito","Handika","Alvin","Hendryana","Adsa"
 ];
 
-// Normalisasi nama → lowercase
 function normalizeName(name) {
   return name.trim().toLowerCase();
 }
-
-// Format tanggal ke bahasa Indonesia
+function isValidName(name) {
+  return masterList.map(n => n.toLowerCase()).includes(normalizeName(name));
+}
 function formatTanggal(inputDate) {
   if (!inputDate) return "";
   const bulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
@@ -141,11 +184,9 @@ function formatTanggal(inputDate) {
   let d = new Date(inputDate);
   return `${hari[d.getDay()]}, ${d.getDate()} ${bulan[d.getMonth()]} ${d.getFullYear()}`;
 }
-
-// Bagi 2 orang per tim
 function formatTeamsPair(input) {
   if (!input.trim()) return "";
-  let names = input.split(",").map(n => n.trim()).filter(n => n);
+  let names = input.split(",").map(n => n.trim()).filter(n => isValidName(n));
   let result = "";
   for (let i=0; i<names.length; i+=2) {
     let person1 = names[i];
@@ -154,26 +195,23 @@ function formatTeamsPair(input) {
   }
   return result;
 }
-
-// Ambil semua nama dari input
 function extractNames(...inputs) {
-  let all = [];
+  let all = [], invalid = [];
   inputs.forEach(txt=>{
     txt.split(/[.,|&\n]/).forEach(n=>{
       let nama = n.trim();
       if (!nama) return;
-      all.push(normalizeName(nama));
+      if (isValidName(nama)) all.push(normalizeName(nama));
+      else invalid.push(nama);
     });
   });
+  if (invalid.length) alert("⚠️ Nama tidak dikenali (tidak masuk laporan): " + [...new Set(invalid)].join(", "));
   return all;
 }
-
 function generate() {
   let tanggal = formatTanggal(document.getElementById("tanggal").value);
-
   let mainst = formatTeamsPair(document.getElementById("mainst").value);
   let odp = formatTeamsPair(document.getElementById("odp").value);
-
   let tarik = "";
   if (document.getElementById("tarik").value.trim()) {
     let blocks = document.getElementById("tarik").value.split(".");
@@ -184,20 +222,15 @@ function generate() {
       tarik += `Team Tarik ${i+1} ${tarikan}\n${tim}\n`;
     });
   }
-
   let lainnya = "";
   if (document.getElementById("lainnya").value.trim()) {
     let jenis = document.getElementById("lainnya").value.split(".");
-    jenis.forEach((j) => {
-      lainnya += `${j.trim()}\n`;
-    });
+    jenis.forEach((j) => { lainnya += `${j.trim()}\n`; });
   }
-
   let izin = document.getElementById("izin").value.trim();
   let sakit = document.getElementById("sakit").value.trim();
   let alfa = document.getElementById("alfa").value.trim();
 
-  // Buat laporan
   let laporan = `Tanggal : ${tanggal}\n\n`;
   if (mainst) laporan += `Maintenance & Instalasi\n${mainst}\n`;
   if (odp) laporan += `ODP\n${odp}\n`;
@@ -210,7 +243,6 @@ function generate() {
   document.getElementById("preview").innerText = laporan;
   document.getElementById("actions").style.display = "flex";
 
-  // ===== VALIDASI =====
   let semuaNama = extractNames(
     document.getElementById("mainst").value,
     document.getElementById("odp").value,
@@ -220,38 +252,48 @@ function generate() {
     document.getElementById("sakit").value,
     document.getElementById("alfa").value
   );
-
-  // cek duplikat
   let duplikat = semuaNama.filter((item,idx)=> semuaNama.indexOf(item)!==idx);
-  if (duplikat.length) {
-    alert("⚠️ Duplikat ditemukan: " + [...new Set(duplikat)].join(", "));
-  }
-
-  // cek belum absen
+  if (duplikat.length) alert("⚠️ Duplikat ditemukan: " + [...new Set(duplikat)].join(", "));
   let belum = masterList.filter(nm => !semuaNama.includes(nm.toLowerCase()));
-  if (belum.length) {
-    alert("ℹ️ Belum absen: " + belum.join(", "));
-  }
+  if (belum.length) alert("ℹ️ Belum absen: " + belum.join(", "));
 }
-
 function copyText() {
   let text = document.getElementById("preview").innerText;
   navigator.clipboard.writeText(text).then(()=> alert("Laporan disalin!"));
 }
-
 function sendWA() {
   let text = document.getElementById("preview").innerText;
   if (!text.trim()) return alert("Belum ada laporan untuk dikirim.");
   let url = "https://wa.me/?text=" + encodeURIComponent(text);
   window.open(url, "_blank");
 }
-
 function clearPreview() {
   document.getElementById("preview").innerText = "";
   document.getElementById("actions").style.display = "none";
 }
 
-// Default tanggal hari ini
+// === AUTOCOMPLETE ===
+function showSuggestions(el) {
+  let id = el.id;
+  let sugBox = document.getElementById("sug-" + id);
+  sugBox.innerHTML = "";
+  let val = el.value.split(",").pop().trim().toLowerCase();
+  if (!val) return;
+  let matches = masterList.filter(n => n.toLowerCase().includes(val));
+  matches.forEach(m=>{
+    let div = document.createElement("div");
+    div.innerText = m;
+    div.onclick = function() {
+      let parts = el.value.split(",");
+      parts[parts.length-1] = " " + m;
+      el.value = parts.join(",").replace(/^,/, "");
+      sugBox.innerHTML = "";
+      el.focus();
+    };
+    sugBox.appendChild(div);
+  });
+}
+
 window.onload = function() {
   let today = new Date();
   let yyyy = today.getFullYear();
