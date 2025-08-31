@@ -1,235 +1,134 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
-  <title>Tools Teknisi</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tools Teknisi Subang</title>
   <style>
-    :root {
-      --bg: #0a0a0f;
-      --card-bg: #111827;
-      --neon: #00d9ff;
-      --neon-glow: 0 0 8px #00d9ff, 0 0 16px #00d9ff, 0 0 32px #00d9ff;
-      --radius: 18px;
-    }
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Poppins:wght@400;600&display=swap');
 
-    * { box-sizing: border-box; }
     body {
       margin: 0;
-      font-family: "Segoe UI", Roboto, sans-serif;
-      background: radial-gradient(circle at 50% -20%, #102a43 0%, #000 80%);
-      color: white;
-      min-height: 100vh;
+      font-family: "Poppins", sans-serif;
+      background: url('https://i.ibb.co/7QpKsCX/dark-bg.jpg') no-repeat center center/cover;
+      color: #fff;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: space-between;
-      overflow-x: hidden;
-    }
-
-    /* efek bintang neon */
-    body::before {
-      content: "";
-      position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background-image: 
-        radial-gradient(circle, rgba(0,217,255,0.5) 2px, transparent 2px),
-        radial-gradient(circle, rgba(0,217,255,0.3) 1px, transparent 1px);
-      background-size: 80px 80px, 40px 40px;
-      background-position: 0 0, 20px 20px;
-      z-index: 0;
-      animation: moveStars 40s linear infinite;
-    }
-
-    @keyframes moveStars {
-      from { background-position: 0 0, 20px 20px; }
-      to { background-position: 80px 80px, 100px 100px; }
-    }
-
-    h1 {
-      font-size: 28px;
-      letter-spacing: 3px;
-      margin-top: 60px;
-      text-transform: uppercase;
-      color: var(--neon);
-      text-shadow: var(--neon-glow);
-      z-index: 1;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(2, 160px);
-      gap: 24px;
-      margin: 40px 0;
-      z-index: 1;
-    }
-
-    .card {
+      min-height: 100vh;
+      padding: 40px 20px;
       position: relative;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 120px;
-      border-radius: var(--radius);
-      background: var(--card-bg);
-      color: var(--neon);
-      text-decoration: none;
-      font-size: 18px;
-      font-weight: bold;
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      transition: transform 0.25s ease, box-shadow 0.25s ease;
-      box-shadow: inset 0 0 12px rgba(0, 217, 255, 0.4);
       overflow: hidden;
     }
 
-    .card:hover {
-      transform: translateY(-4px) scale(1.03);
-      box-shadow: var(--neon-glow);
-    }
-
-    .card::before {
+    /* Overlay gradasi */
+    body::before {
       content: "";
       position: absolute;
-      inset: 0;
-      border-radius: var(--radius);
-      padding: 2px;
-      background: linear-gradient(45deg, transparent, var(--neon), transparent);
-      -webkit-mask: 
-        linear-gradient(#fff 0 0) content-box, 
-        linear-gradient(#fff 0 0);
-      -webkit-mask-composite: xor;
-              mask-composite: exclude;
-      animation: border-anim 3s linear infinite;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: linear-gradient(135deg, rgba(10,10,30,0.9), rgba(20,20,60,0.85));
+      z-index: 0;
     }
 
-    @keyframes border-anim {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-
-    footer {
-      width: 100%;
+    .profile {
       text-align: center;
-      padding: 20px 0;
-      font-size: 14px;
-      color: rgba(255,255,255,0.7);
-      background: rgba(0,0,0,0.4);
-      backdrop-filter: blur(6px);
+      margin-bottom: 30px;
       z-index: 1;
     }
 
-    /* Modal Alert */
-    .modal {
-      position: fixed;
-      inset: 0;
+    .profile img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid #0ff;
+      box-shadow: 0 0 20px rgba(0,255,255,0.6);
+    }
+
+    .profile h1 {
+      margin: 15px 0 5px;
+      font-size: 1.6em;
+      font-family: "Orbitron", sans-serif;
+      color: #0ff;
+      text-shadow: 0 0 10px rgba(0,255,255,0.6);
+    }
+
+    .profile p {
+      margin: 0;
+      font-size: 0.9em;
+      color: #cccccc;
+    }
+
+    .links {
+      width: 100%;
+      max-width: 400px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      z-index: 1;
+    }
+
+    .link-item {
       display: flex;
       align-items: center;
       justify-content: center;
-      background: rgba(0,0,0,0.7);
-      visibility: hidden;
-      opacity: 0;
-      transition: opacity .3s ease, visibility .3s ease;
-      z-index: 999;
-    }
-    .modal.show {
-      visibility: visible;
-      opacity: 1;
-    }
-    .modal-box {
-      background: #111827;
-      padding: 24px 32px;
-      border-radius: 12px;
-      text-align: center;
-      box-shadow: var(--neon-glow);
-      max-width: 300px;
-      border: 2px solid var(--neon);
-      animation: pop .4s ease;
-    }
-    .modal-box h2 {
-      margin: 0 0 10px;
-      font-size: 20px;
-      color: var(--neon);
-    }
-    .modal-box p {
-      margin: 0 0 16px;
-      font-size: 14px;
-      color: #ccc;
-    }
-    .btn-close {
-      background: var(--neon);
-      border: none;
-      color: #000;
-      font-weight: bold;
-      padding: 8px 16px;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: 0.2s;
-    }
-    .btn-close:hover {
-      background: #00bfe6;
-    }
-    @keyframes pop {
-      0% { transform: scale(0.8); opacity: 0; }
-      100% { transform: scale(1); opacity: 1; }
+      padding: 16px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(12px);
+      color: #0ff;
+      font-size: 1.1em;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.25s ease-in-out;
+      box-shadow: 0 0 15px rgba(0,255,255,0.2);
     }
 
-    @media (max-width: 480px) {
-      .grid {
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-      }
-      .card {
-        height: 100px;
-        font-size: 15px;
-      }
+    .link-item:hover {
+      transform: translateY(-5px) scale(1.03);
+      background: rgba(0, 255, 255, 0.08);
+      box-shadow: 0 0 20px rgba(0,255,255,0.5);
+    }
+
+    .icon {
+      margin-right: 10px;
+      font-size: 1.3em;
+    }
+
+    footer {
+      margin-top: auto;
+      padding: 15px;
+      font-size: 0.8em;
+      color: #aaaaaa;
+      text-align: center;
+      z-index: 1;
     }
   </style>
 </head>
 <body>
-
-  <h1>TOOLS TEKNISI</h1>
-
-  <div class="grid">
-    <a href="https://ionnetworksubang.github.io/form" class="card">TOOLS WA</a>
-    <a href="https://ionnetworksubang.github.io/Ion-network/form.html" class="card">INPUT CUSTOMER</a>
-    <a href="#" class="card" data-dev="true">KMZ</a>
-    <a href="#" class="card" data-dev="true">+</a>
+  <div class="profile">
+    <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQECJLG8uP5WpjGIAPURYLH_pz1JrK4Q8ogw1pXEjigXvbq7IAio6kWZlBe&s=10" alt="Logo Teknisi Subang">
+    <h1>Tools Teknisi Subang</h1>
+    <p>Akses cepat kebutuhan teknisi</p>
   </div>
 
-  <footer>© Jhon 2025</footer>
-
-  <!-- Modal Alert -->
-  <div class="modal" id="modal">
-    <div class="modal-box">
-      <h2>🚧 Dalam Pengembangan</h2>
-      <p>Fitur ini masih dalam tahap pengembangan. Nantikan update berikutnya!</p>
-      <button class="btn-close" onclick="closeModal()">Tutup</button>
-    </div>
+  <div class="links">
+    <a href="https://ionnetworksubang.github.io/form/" class="link-item" target="_blank">
+      <span class="icon">📱</span> Tools WhatsApp
+    </a>
+    <a href="https://ionnetworksubang.github.io/Ion-network/form.html" class="link-item" target="_blank">
+      <span class="icon">📝</span> Input Client
+    </a>
+    <a href="https://ionnetworksubang.github.io/laporan/" class="link-item" target="_blank">
+      <span class="icon">📊</span> Laporan
+    </a>
+    <a href="absen.html" class="link-item" target="_blank">
+      <span class="icon">✅</span> Absen
+    </a>
   </div>
 
-  <script>
-    const modal = document.getElementById("modal");
-    const devLinks = document.querySelectorAll('[data-dev="true"]');
-
-    devLinks.forEach(link=>{
-      link.addEventListener("click", e=>{
-        e.preventDefault();
-        modal.classList.add("show");
-      });
-    });
-
-    function closeModal(){
-      modal.classList.remove("show");
-    }
-
-    // klik luar modal juga nutup
-    modal.addEventListener("click", e=>{
-      if(e.target === modal){
-        closeModal();
-      }
-    });
-  </script>
+  <footer>
+    © 2025 Tools Teknisi Subang
+  </footer>
 </body>
 </html>
-  
