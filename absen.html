@@ -88,11 +88,8 @@
   <label>Tanggal</label>
   <input type="date" id="tanggal">
 
-  <label>Instalasi (nama pisahkan koma, tim baru pakai titik)</label>
-  <textarea id="instalasi"></textarea>
-
-  <label>Maintenance</label>
-  <textarea id="maintenance"></textarea>
+  <label>Maintenance & Instalasi (pisahkan nama dengan koma)</label>
+  <textarea id="mainst"></textarea>
 
   <label>ODP</label>
   <textarea id="odp"></textarea>
@@ -124,42 +121,58 @@
 </div>
 
 <script>
-// Ubah format tanggal ke: Senin, 27 Juni 2025
+// Master daftar nama (23 orang fix, tanpa alias)
+const masterList = [
+  "Hendrik","Naufal","Ridwan","M Ridho","Gugun","Ricky","Doni","Latif","Hapid",
+  "Firman","Harys","Syaiful","Ramdan","Adrian","Gelar","Taupik","Sahid","Ridho",
+  "Gito","Handika","Alvin","Hendryana","Adsa"
+];
+
+// Normalisasi nama → lowercase
+function normalizeName(name) {
+  return name.trim().toLowerCase();
+}
+
+// Format tanggal ke bahasa Indonesia
 function formatTanggal(inputDate) {
   if (!inputDate) return "";
   const bulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
   const hari = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
-
   let d = new Date(inputDate);
-  let namaHari = hari[d.getDay()];
-  let tanggal = d.getDate();
-  let namaBulan = bulan[d.getMonth()];
-  let tahun = d.getFullYear();
-
-  return `${namaHari}, ${tanggal} ${namaBulan} ${tahun}`;
+  return `${hari[d.getDay()]}, ${d.getDate()} ${bulan[d.getMonth()]} ${d.getFullYear()}`;
 }
 
-function formatTeams(input, prefix="Team") {
+// Bagi 2 orang per tim
+function formatTeamsPair(input) {
   if (!input.trim()) return "";
-  let blocks = input.split(".");
+  let names = input.split(",").map(n => n.trim()).filter(n => n);
   let result = "";
-  blocks.forEach((block, i) => {
-    let teams = block.split(",");
-    let names = teams.map(n => n.trim()).filter(n => n);
-    if (names.length) {
-      result += `${prefix} ${i+1} : ${names.join(" & ")}\n`;
-    }
-  });
+  for (let i=0; i<names.length; i+=2) {
+    let person1 = names[i];
+    let person2 = names[i+1] || "";
+    result += `Team ${Math.floor(i/2)+1}: ${person1}${person2 ? " & " + person2 : ""}\n`;
+  }
   return result;
 }
 
-function generate() {
-  let tanggalRaw = document.getElementById("tanggal").value;
-  let tanggal = formatTanggal(tanggalRaw);
+// Ambil semua nama dari input
+function extractNames(...inputs) {
+  let all = [];
+  inputs.forEach(txt=>{
+    txt.split(/[.,|&\n]/).forEach(n=>{
+      let nama = n.trim();
+      if (!nama) return;
+      all.push(normalizeName(nama));
+    });
+  });
+  return all;
+}
 
-  let instalasi = formatTeams(document.getElementById("instalasi").value, "Team");
-  let maintenance = formatTeams(document.getElementById("maintenance").value, "Team");
-  let odp = formatTeams(document.getElementById("odp").value, "Team");
+function generate() {
+  let tanggal = formatTanggal(document.getElementById("tanggal").value);
+
+  let mainst = formatTeamsPair(document.getElementById("mainst").value);
+  let odp = formatTeamsPair(document.getElementById("odp").value);
 
   let tarik = "";
   if (document.getElementById("tarik").value.trim()) {
@@ -167,7 +180,7 @@ function generate() {
     blocks.forEach((block, i) => {
       let parts = block.split("|");
       let tarikan = parts[0]?.trim() ? `Tarikan ${parts[0].trim()}` : "";
-      let tim = formatTeams(parts[1]||"", "Team");
+      let tim = formatTeamsPair(parts[1]||"");
       tarik += `Team Tarik ${i+1} ${tarikan}\n${tim}\n`;
     });
   }
@@ -184,9 +197,9 @@ function generate() {
   let sakit = document.getElementById("sakit").value.trim();
   let alfa = document.getElementById("alfa").value.trim();
 
+  // Buat laporan
   let laporan = `Tanggal : ${tanggal}\n\n`;
-  if (instalasi) laporan += `Instalasi\n${instalasi}\n`;
-  if (maintenance) laporan += `Maintenance\n${maintenance}\n`;
+  if (mainst) laporan += `Maintenance & Instalasi\n${mainst}\n`;
   if (odp) laporan += `ODP\n${odp}\n`;
   if (tarik) laporan += `Tarik\n${tarik}\n`;
   if (lainnya) laporan += `Kerjaan Lainnya\n${lainnya}\n`;
@@ -196,21 +209,39 @@ function generate() {
 
   document.getElementById("preview").innerText = laporan;
   document.getElementById("actions").style.display = "flex";
+
+  // ===== VALIDASI =====
+  let semuaNama = extractNames(
+    document.getElementById("mainst").value,
+    document.getElementById("odp").value,
+    document.getElementById("tarik").value,
+    document.getElementById("lainnya").value,
+    document.getElementById("izin").value,
+    document.getElementById("sakit").value,
+    document.getElementById("alfa").value
+  );
+
+  // cek duplikat
+  let duplikat = semuaNama.filter((item,idx)=> semuaNama.indexOf(item)!==idx);
+  if (duplikat.length) {
+    alert("⚠️ Duplikat ditemukan: " + [...new Set(duplikat)].join(", "));
+  }
+
+  // cek belum absen
+  let belum = masterList.filter(nm => !semuaNama.includes(nm.toLowerCase()));
+  if (belum.length) {
+    alert("ℹ️ Belum absen: " + belum.join(", "));
+  }
 }
 
 function copyText() {
   let text = document.getElementById("preview").innerText;
-  navigator.clipboard.writeText(text).then(()=>{
-    alert("Laporan disalin!");
-  });
+  navigator.clipboard.writeText(text).then(()=> alert("Laporan disalin!"));
 }
 
 function sendWA() {
   let text = document.getElementById("preview").innerText;
-  if (!text.trim()) {
-    alert("Belum ada laporan untuk dikirim.");
-    return;
-  }
+  if (!text.trim()) return alert("Belum ada laporan untuk dikirim.");
   let url = "https://wa.me/?text=" + encodeURIComponent(text);
   window.open(url, "_blank");
 }
@@ -220,7 +251,7 @@ function clearPreview() {
   document.getElementById("actions").style.display = "none";
 }
 
-// === Set default tanggal ke hari ini ===
+// Default tanggal hari ini
 window.onload = function() {
   let today = new Date();
   let yyyy = today.getFullYear();
@@ -230,5 +261,4 @@ window.onload = function() {
 }
 </script>
 </body>
-  </html>
-  
+</html>
