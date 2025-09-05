@@ -1,12 +1,11 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Absensi & Laporan Teknisi</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&family=Poppins:wght@400;600&display=swap');
-
     body {
       margin: 0;
       font-family: "Poppins", sans-serif;
@@ -62,10 +61,7 @@
       cursor: pointer;
       transition: 0.25s;
     }
-    button:hover {
-      background: #00cccc;
-      transform: scale(1.02);
-    }
+    button:hover { background: #00cccc; transform: scale(1.02); }
     .preview {
       margin-top: 20px;
       background: rgba(0,0,0,0.4);
@@ -79,7 +75,6 @@
       gap: 10px;
       margin-top: 15px;
     }
-    /* Style untuk autocomplete */
     .suggestions {
       position: absolute;
       background: #111;
@@ -90,17 +85,9 @@
       z-index: 1000;
       width: calc(100% - 20px);
     }
-    .suggestions div {
-      padding: 8px 12px;
-      cursor: pointer;
-    }
-    .suggestions div:hover {
-      background: #0ff;
-      color: #000;
-    }
-    .relative {
-      position: relative;
-    }
+    .suggestions div { padding: 8px 12px; cursor: pointer; }
+    .suggestions div:hover { background: #0ff; color: #000; }
+    .relative { position: relative; }
   </style>
 </head>
 <body>
@@ -123,7 +110,7 @@
   </div>
 
   <div class="relative">
-    <label>Tarik (contoh: 1.9km|Ridwan, Naufal)</label>
+    <label>Tarik (contoh: 1.9 km | Ridwan, Naufal.)</label>
     <textarea id="tarik" oninput="showSuggestions(this)"></textarea>
     <div class="suggestions" id="sug-tarik"></div>
   </div>
@@ -164,143 +151,313 @@
 </div>
 
 <script>
-// Master daftar nama
+// ====== MASTER DATA ======
 const masterList = [
   "Hendrik","Naufal","Ridwan","M Ridho","Gugun","Ricky","Doni","Latif","Hapid",
   "Firman","Harys","Syaiful","Ramdan","Adrian","Gelar","Taupik","Sahid","Ridho",
-  "Gito","Handika","Alvin","Hendryana","Adsa"
+  "Gito","Handika","Alvin","Hendryana","Adsa","Komarudin "
 ];
 
-function normalizeName(name) {
-  return name.trim().toLowerCase();
+// (Opsional) alias typo umum -> nama baku di masterList
+const aliasMap = {
+  "mrido":"M Ridho",
+  "mridho":"M Ridho",
+  "ridho":"Ridho",
+  "komeng":"Komarudin ",
+  "Komarudin ":"Komarudin ",
+  "herdyana":"Hendryana"
+};
+
+// ====== UTIL & VALIDASI NAMA ======
+const lowerMaster = masterList.map(n => n.toLowerCase());
+function normalizeName(n){ return n.trim().replace(/\s+/g,' ').toLowerCase(); }
+function keyName(n){ return n.toLowerCase().replace(/[^a-z]/g,''); } // untuk fuzzy
+
+function levenshtein(a,b){
+  const m=a.length,n=b.length;
+  const dp=Array.from({length:m+1},()=>Array(n+1).fill(0));
+  for(let i=0;i<=m;i++) dp[i][0]=i;
+  for(let j=0;j<=n;j++) dp[0][j]=j;
+  for(let i=1;i<=m;i++){
+    for(let j=1;j<=n;j++){
+      const cost = a[i-1]===b[j-1]?0:1;
+      dp[i][j]=Math.min(dp[i-1][j]+1, dp[i][j-1]+1, dp[i-1][j-1]+cost);
+    }
+  }
+  return dp[m][n];
 }
-function isValidName(name) {
-  return masterList.map(n => n.toLowerCase()).includes(normalizeName(name));
+
+// kembalikan nama baku dari masterList jika cocok/alias/fuzzy, else null
+function resolveName(raw){
+  if(!raw) return null;
+  const norm = normalizeName(raw);
+  // exact case-insensitive
+  const exactIdx = lowerMaster.indexOf(norm);
+  if (exactIdx !== -1) return masterList[exactIdx];
+
+  // alias by key
+  const k = keyName(norm);
+  if (aliasMap[k]) return aliasMap[k];
+
+  // fuzzy (jarak <=1) terhadap key master
+  let best = {name:null, d:2};
+  for (const m of masterList){
+    const d = levenshtein(keyName(norm), keyName(m.toLowerCase()));
+    if (d < best.d){ best = {name:m, d}; if (d===0) break; }
+  }
+  if (best.name && best.d <= 1) return best.name;
+
+  return null;
 }
-function formatTanggal(inputDate) {
+
+// ====== FORMAT TANGGAL & BAGIAN YANG TIDAK DIUBAH ======
+function formatTanggal(inputDate){
   if (!inputDate) return "";
-  const bulan = ["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
-  const hari = ["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
-  let d = new Date(inputDate);
+  const bulan=["Januari","Februari","Maret","April","Mei","Juni","Juli","Agustus","September","Oktober","November","Desember"];
+  const hari=["Minggu","Senin","Selasa","Rabu","Kamis","Jumat","Sabtu"];
+  let d=new Date(inputDate);
   return `${hari[d.getDay()]}, ${d.getDate()} ${bulan[d.getMonth()]} ${d.getFullYear()}`;
 }
-function formatTeamsPair(input) {
+
+// *** Maintenance & Instalasi (JANGAN DIUBAH LOGIKANYA) ***
+function formatTeamsPair(input){
   if (!input.trim()) return "";
-  let names = input.split(",").map(n => n.trim()).filter(n => isValidName(n));
-  let result = "";
-  for (let i=0; i<names.length; i+=2) {
-    let person1 = names[i];
-    let person2 = names[i+1] || "";
-    result += `Team ${Math.floor(i/2)+1}: ${person1}${person2 ? " & " + person2 : ""}\n`;
+  let names=input.split(",").map(n=>n.trim()).filter(n=>resolveName(n));
+  let result="";
+  for(let i=0;i<names.length;i+=2){
+    let person1=resolveName(names[i]);
+    let person2=resolveName(names[i+1])||"";
+    result+=`Team ${Math.floor(i/2)+1}: ${person1}${person2?" & "+person2:""}\n`;
   }
   return result;
 }
-function extractNames(...inputs) {
-  let all = [], invalid = [];
-  inputs.forEach(txt=>{
-    txt.split(/[.,|&\n]/).forEach(n=>{
-      let nama = n.trim();
-      if (!nama) return;
-      if (isValidName(nama)) all.push(normalizeName(nama));
-      else invalid.push(nama);
+
+// ====== PARSER TAMPILAN (untuk preview) ======
+function formatOdp(input){
+  if (!input.trim()) return "";
+  let tims = input.split(".").map(t => t.trim()).filter(Boolean);
+  let res = "";
+  tims.forEach((tim, i) => {
+    // tampilkan sebagaimana diketik (dibersihkan koma/spasi)
+    let anggota = tim.split(",").map(n => n.trim()).filter(Boolean).join(", ");
+    res += `Tim ODP ${i+1}: ${anggota}\n`;
+  });
+  return res;
+}
+function formatTarik(input){
+  if (!input.trim()) return "";
+  let blocks = input.split(".").map(b => b.trim()).filter(Boolean);
+  let res = "";
+  blocks.forEach((blk,i)=>{
+    let parts = blk.split("|");
+    let jarak = (parts[0]||"").trim();
+    let anggota = (parts[1]||"").split(",").map(n=>n.trim()).filter(Boolean).join(", ");
+    res += `Tim Tarik ${i+1}: Tarikan ${jarak}\n${anggota}\n\n`;
+  });
+  return res;
+}
+function formatLainnya(input){
+  if (!input.trim()) return "";
+  let blocks = input.split(".").map(b => b.trim()).filter(Boolean);
+  let res = "";
+  blocks.forEach((blk)=>{
+    let jenis = blk.match(/\((.*?)\)/);
+    let namaPart = blk.replace(/\(.*?\)/,"").trim();
+    let anggota = namaPart.split(",").map(n => n.trim()).filter(Boolean).join(", ");
+    if (jenis){
+      res += `${jenis[1]}:\nTeam: ${anggota}\n\n`;
+    } else {
+      res += `Team: ${anggota}\n\n`;
+    }
+  });
+  return res;
+}
+
+// ====== EKSTRAKSI NAMA (AKURAT, HANYA NAMA) ======
+function parseNamesMainst(txt){
+  if(!txt.trim()) return {names:[], unknown:[]};
+  const tokens = txt.split(",").map(s=>s.trim()).filter(Boolean);
+  const names=[], unknown=[];
+  tokens.forEach(t=>{
+    const r=resolveName(t);
+    if (r) names.push(r); else unknown.push(t);
+  });
+  return {names, unknown};
+}
+function parseNamesODP(txt){
+  if(!txt.trim()) return {names:[], unknown:[]};
+  const teams = txt.split(".").map(s=>s.trim()).filter(Boolean);
+  const names=[], unknown=[];
+  teams.forEach(team=>{
+    team.split(",").map(s=>s.trim()).filter(Boolean).forEach(t=>{
+      const r=resolveName(t);
+      if (r) names.push(r); else unknown.push(t);
     });
   });
-  if (invalid.length) alert("⚠️ Nama tidak dikenali (tidak masuk laporan): " + [...new Set(invalid)].join(", "));
-  return all;
+  return {names, unknown};
 }
-function generate() {
-  let tanggal = formatTanggal(document.getElementById("tanggal").value);
-  let mainst = formatTeamsPair(document.getElementById("mainst").value);
-  let odp = formatTeamsPair(document.getElementById("odp").value);
-  let tarik = "";
-  if (document.getElementById("tarik").value.trim()) {
-    let blocks = document.getElementById("tarik").value.split(".");
-    blocks.forEach((block, i) => {
-      let parts = block.split("|");
-      let tarikan = parts[0]?.trim() ? `Tarikan ${parts[0].trim()}` : "";
-      let tim = formatTeamsPair(parts[1]||"");
-      tarik += `Team Tarik ${i+1} ${tarikan}\n${tim}\n`;
+function parseNamesTarik(txt){
+  if(!txt.trim()) return {names:[], unknown:[]};
+  const blocks = txt.split(".").map(s=>s.trim()).filter(Boolean);
+  const names=[], unknown=[];
+  blocks.forEach(blk=>{
+    const parts = blk.split("|");
+    const namePart = (parts[1]||"");
+    namePart.split(",").map(s=>s.trim()).filter(Boolean).forEach(t=>{
+      const r=resolveName(t);
+      if (r) names.push(r); else unknown.push(t);
     });
+  });
+  return {names, unknown};
+}
+function parseNamesLainnya(txt){
+  if(!txt.trim()) return {names:[], unknown:[]};
+  const blocks = txt.split(".").map(s=>s.trim()).filter(Boolean);
+  const names=[], unknown=[];
+  blocks.forEach(blk=>{
+    const namePart = blk.replace(/\(.*?\)/g,"").trim();
+    if(!namePart) return;
+    namePart.split(",").map(s=>s.trim()).filter(Boolean).forEach(t=>{
+      const r=resolveName(t);
+      if (r) names.push(r); else unknown.push(t);
+    });
+  });
+  return {names, unknown};
+}
+function parseNamesSimpleComma(txt){
+  if(!txt.trim()) return {names:[], unknown:[]};
+  const tokens = txt.split(/[,\n]/).map(s=>s.trim()).filter(Boolean);
+  const names=[], unknown=[];
+  tokens.forEach(t=>{
+    const r=resolveName(t);
+    if (r) names.push(r); else unknown.push(t);
+  });
+  return {names, unknown};
+}
+
+function collectAllNames({withAlert=false}={}){
+  const agg = {names:[], unknown:[]};
+
+  const a = parseNamesMainst(document.getElementById("mainst").value);
+  const b = parseNamesODP(document.getElementById("odp").value);
+  const c = parseNamesTarik(document.getElementById("tarik").value);
+  const d = parseNamesLainnya(document.getElementById("lainnya").value);
+  const e = parseNamesSimpleComma(document.getElementById("izin").value);
+  const f = parseNamesSimpleComma(document.getElementById("sakit").value);
+  const g = parseNamesSimpleComma(document.getElementById("alfa").value);
+
+  [a,b,c,d,e,f,g].forEach(({names,unknown})=>{
+    agg.names.push(...names);
+    agg.unknown.push(...unknown);
+  });
+
+  // unikkan nama pakai key
+  const seen=new Set(); const unique=[];
+  agg.names.forEach(n=>{
+    const k=keyName(n);
+    if(!seen.has(k)){ seen.add(k); unique.push(n); }
+  });
+  agg.names = unique;
+
+  // Hanya alert untuk token yang berpotensi nama (mengandung huruf) & bukan noise
+  const unknownFiltered = [...new Set(agg.unknown.filter(t=>/[a-zA-Z]/.test(t)))];
+  if (withAlert && unknownFiltered.length){
+    alert("⚠️ Nama tidak dikenali: " + unknownFiltered.join(", "));
   }
-  let lainnya = "";
-  if (document.getElementById("lainnya").value.trim()) {
-    let jenis = document.getElementById("lainnya").value.split(".");
-    jenis.forEach((j) => { lainnya += `${j.trim()}\n`; });
-  }
-  let izin = document.getElementById("izin").value.trim();
-  let sakit = document.getElementById("sakit").value.trim();
-  let alfa = document.getElementById("alfa").value.trim();
 
-  let laporan = `Tanggal : ${tanggal}\n\n`;
-  if (mainst) laporan += `Maintenance & Instalasi\n${mainst}\n`;
-  if (odp) laporan += `ODP\n${odp}\n`;
-  if (tarik) laporan += `Tarik\n${tarik}\n`;
-  if (lainnya) laporan += `Kerjaan Lainnya\n${lainnya}\n`;
-  if (izin) laporan += `Izin : ${izin}\n`;
-  if (sakit) laporan += `Sakit : ${sakit}\n`;
-  if (alfa) laporan += `Alfa : ${alfa}\n`;
+  return agg;
+}
 
-  document.getElementById("preview").innerText = laporan;
-  document.getElementById("actions").style.display = "flex";
+// ====== GENERATE PREVIEW ======
+function generate(){
+  const tanggal=formatTanggal(document.getElementById("tanggal").value);
+  const mainst=formatTeamsPair(document.getElementById("mainst").value); // tetap
+  const odp=formatOdp(document.getElementById("odp").value);
+  const tarik=formatTarik(document.getElementById("tarik").value);
+  const lainnya=formatLainnya(document.getElementById("lainnya").value);
+  const izin=document.getElementById("izin").value.trim();
+  const sakit=document.getElementById("sakit").value.trim();
+  const alfa=document.getElementById("alfa").value.trim();
 
-  let semuaNama = extractNames(
-    document.getElementById("mainst").value,
-    document.getElementById("odp").value,
-    document.getElementById("tarik").value,
-    document.getElementById("lainnya").value,
-    document.getElementById("izin").value,
-    document.getElementById("sakit").value,
-    document.getElementById("alfa").value
-  );
-  let duplikat = semuaNama.filter((item,idx)=> semuaNama.indexOf(item)!==idx);
+  let laporan=`Tanggal : ${tanggal}\n\n`;
+  if (mainst) laporan+=`Maintenance & Instalasi\n${mainst}\n`;
+  if (odp)    laporan+=`ODP\n${odp}\n`;
+  if (tarik)  laporan+=`Tarik\n${tarik}\n`;
+  if (lainnya)laporan+=`Kerjaan Lainnya\n${lainnya}\n`;
+  if (izin)   laporan+=`Izin : ${izin}\n`;
+  if (sakit)  laporan+=`Sakit : ${sakit}\n`;
+  if (alfa)   laporan+=`Alfa : ${alfa}\n`;
+
+  document.getElementById("preview").innerText=laporan;
+  document.getElementById("actions").style.display="flex";
+
+  // ---- Validasi nama (akurat) ----
+  const agg = collectAllNames({withAlert:true});
+
+  // duplikat
+  const keys = agg.names.map(n=>keyName(n));
+  const duplikat = agg.names.filter((n,i)=> keys.indexOf(keyName(n)) !== i);
   if (duplikat.length) alert("⚠️ Duplikat ditemukan: " + [...new Set(duplikat)].join(", "));
-  let belum = masterList.filter(nm => !semuaNama.includes(nm.toLowerCase()));
+
+  // yang belum absen
+  const presentKeys = new Set(keys);
+  const belum = masterList.filter(nm => !presentKeys.has(keyName(nm)));
   if (belum.length) alert("ℹ️ Belum absen: " + belum.join(", "));
 }
-function copyText() {
-  let text = document.getElementById("preview").innerText;
-  navigator.clipboard.writeText(text).then(()=> alert("Laporan disalin!"));
+
+// ====== ACTIONS ======
+function copyText(){
+  let text=document.getElementById("preview").innerText;
+  navigator.clipboard.writeText(text).then(()=>alert("Laporan disalin!"));
 }
-function sendWA() {
-  let text = document.getElementById("preview").innerText;
+function sendWA(){
+  let text=document.getElementById("preview").innerText;
   if (!text.trim()) return alert("Belum ada laporan untuk dikirim.");
-  let url = "https://wa.me/?text=" + encodeURIComponent(text);
-  window.open(url, "_blank");
+  let url="https://wa.me/?text="+encodeURIComponent(text);
+  window.open(url,"_blank");
 }
-function clearPreview() {
-  document.getElementById("preview").innerText = "";
-  document.getElementById("actions").style.display = "none";
+function clearPreview(){
+  document.getElementById("preview").innerText="";
+  document.getElementById("actions").style.display="none";
 }
 
-// === AUTOCOMPLETE ===
-function showSuggestions(el) {
-  let id = el.id;
-  let sugBox = document.getElementById("sug-" + id);
-  sugBox.innerHTML = "";
-  let val = el.value.split(",").pop().trim().toLowerCase();
+// ====== AUTOCOMPLETE (hide nama yang sudah dipakai) ======
+function showSuggestions(el){
+  const id=el.id;
+  const sugBox=document.getElementById("sug-"+id);
+  sugBox.innerHTML="";
+  const val=el.value.split(",").pop().trim().toLowerCase();
   if (!val) return;
-  let matches = masterList.filter(n => n.toLowerCase().includes(val));
+
+  // nama yang sudah dipakai (tanpa alert)
+  const used = collectAllNames({withAlert:false}).names.map(n=>n.toLowerCase());
+
+  const matches = masterList.filter(n=>{
+    return n.toLowerCase().includes(val) && !used.includes(n.toLowerCase());
+  });
+
   matches.forEach(m=>{
-    let div = document.createElement("div");
-    div.innerText = m;
-    div.onclick = function() {
-      let parts = el.value.split(",");
-      parts[parts.length-1] = " " + m;
-      el.value = parts.join(",").replace(/^,/, "");
-      sugBox.innerHTML = "";
+    let div=document.createElement("div");
+    div.innerText=m;
+    div.onclick=function(){
+      let parts=el.value.split(",");
+      parts[parts.length-1]=" "+m;
+      el.value=parts.join(",").replace(/^,/,"");
+      sugBox.innerHTML="";
       el.focus();
     };
     sugBox.appendChild(div);
   });
 }
 
-window.onload = function() {
-  let today = new Date();
-  let yyyy = today.getFullYear();
-  let mm = String(today.getMonth()+1).padStart(2,'0');
-  let dd = String(today.getDate()).padStart(2,'0');
-  document.getElementById("tanggal").value = `${yyyy}-${mm}-${dd}`;
+window.onload=function(){
+  let today=new Date();
+  let yyyy=today.getFullYear();
+  let mm=String(today.getMonth()+1).padStart(2,'0');
+  let dd=String(today.getDate()).padStart(2,'0');
+  document.getElementById("tanggal").value=`${yyyy}-${mm}-${dd}`;
 }
 </script>
 </body>
-</html>
+    </html>
+  
